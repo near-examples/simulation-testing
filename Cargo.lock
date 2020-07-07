@@ -1536,6 +1536,7 @@ dependencies = [
  "near-primitives",
  "near-runtime-standalone",
  "near-sdk",
+ "near-vm-errors 0.9.1 (git+https://github.com/nearprotocol/nearcore.git)",
  "serde",
  "serde_json",
  "wee_alloc",

@@ -29,4 +29,5 @@ log = "0.4"
 env_logger = { version = "0.7.1", default-features = false }
 near-crypto = { git = "https://github.com/nearprotocol/nearcore.git" }
 near-primitives = { git = "https://github.com/nearprotocol/nearcore.git" }
+near-vm-errors = { git = "https://github.com/nearprotocol/nearcore.git" }
 near-runtime-standalone = { git = "https://github.com/nearprotocol/nearcore.git" }
