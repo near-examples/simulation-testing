@@ -1,4 +1,4 @@
-use near_sdk::{env, PromiseResult, ext_contract, near_bindgen, AccountId};
+use near_sdk::{env, PromiseResult, ext_contract, near_bindgen, AccountId, Promise};
 use near_sdk::json_types::{U128};
 use borsh::{BorshDeserialize, BorshSerialize};
 use serde_json::json;
@@ -88,17 +88,19 @@ impl Simulation {
         let new_num = u8::from_str_radix(new_num_str, 10).expect("Issue turning &str into u8 apparently");
         env::log(format!("new_num came back: {:?}", new_num).as_bytes());
 
-        if self._is_even(new_num) {
-            ext_fungible_token::transfer(env::signer_account_id(), U128(1), &token_account, TRANSFER_FROM_NEAR_COST, SINGLE_CALL_GAS).then(
-                ext_this_contract::post_transfer(&env::current_account_id(), 0, SINGLE_CALL_GAS)
-            );
-        }
+        self.send_token_if_counter_even(new_num, token_account, env::signer_account_id());
+    }
+
+    pub fn send_token_if_counter_even(&mut self, new_num: u8, token_account: AccountId, recipient_account: AccountId) -> Promise {
+        self._only_owner_predecessor();
+        assert!(self._is_even(new_num), "Number is not even");
+        ext_fungible_token::transfer(recipient_account, U128(1), &token_account, TRANSFER_FROM_NEAR_COST, SINGLE_CALL_GAS)
+        .then(ext_this_contract::post_transfer(&env::current_account_id(), 0, SINGLE_CALL_GAS))
     }
 
     // Note that currently, the simulation tests will not make it this far
     // This is a callback in a callback which is not (yet) supported
     pub fn post_transfer(&mut self) {
-        env::log(b"Top of post_transfer");
         self._only_owner_predecessor();
         assert_eq!(env::promise_results_count(), 1);
         match env::promise_result(0) {
