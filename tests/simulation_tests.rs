@@ -5,6 +5,8 @@ use near_runtime_standalone::RuntimeStandalone;
 use near_sdk::json_types::{U128, U64};
 use serde_json::json;
 use utils::{near_view, near_call, new_root, ntoy, NewFungibleTokenArgs, deploy_and_init_fungible_token, deploy_and_init_counter, deploy_simulation_example};
+use near_primitives::errors::{ActionErrorKind};
+use near_primitives::errors::TxExecutionError;
 
 #[test]
 fn deploy_fungible_check_total_supply() {
@@ -144,7 +146,7 @@ fn deploy_all_check_allowance_before_increment() {
     // Before we can move over the fungible token, though, we need to
 
     // Check Alice's fungible token balance before, which should be zero.
-    let alice_tokens: U128 = near_view(
+    let mut alice_tokens: U128 = near_view(
         &r,
         &FUNGIBLE_TOKEN_ACCOUNT_ID.into(),
         "get_balance",
@@ -200,6 +202,109 @@ fn deploy_all_check_allowance_before_increment() {
 
     assert_eq!(alice_new_tokens.clone().0, 1);
     */
+
+    // Below we will demonstrate handling an error and a limitation with capturing errors in simulation testing.
+    // The following call will fail because we're trying to transfer fungible tokens from an account to itself.
+
+    let will_error = near_call(&mut r,
+        &simulation_example,
+        &SIMULATION_ACCOUNT_ID,
+        "send_token_if_counter_even",
+        &serde_json::to_vec(&json!({
+            "new_num": alice_counter.clone(),
+            "token_account": FUNGIBLE_TOKEN_ACCOUNT_ID,
+            "recipient_account": SIMULATION_ACCOUNT_ID,
+        }),).unwrap(),
+        U64(MAX_GAS),
+        0
+    );
+    if will_error.is_err() {
+        let execution_status  = will_error.clone().unwrap_err().status;
+
+        #[allow(unused_variables)]
+        if let ExecutionStatus::Failure(TxExecutionError::ActionError(near_primitives::errors::ActionError { index, kind })) = execution_status {
+            if let ActionErrorKind::FunctionCallError(near_vm_errors::FunctionCallError::HostError(near_vm_errors::HostError::GuestPanic { panic_msg })) = kind {
+                assert_eq!(panic_msg, "(post_transfer) The promise failed. See receipt failures.".to_string());
+
+                // Uncomment the below line if the ".then" is removed at the bottom of send_token_if_counter_even in src/lib.rs
+                // assert!(panic_msg.contains("The new owner should be different from the current owner"));
+            }
+        }
+    }
+
+    // Note that above, the error we received is the error set up in src/lib.rs and not the error returned from the fungible token contract.
+    // (At the time of this writing, the error message for an account attempting to transfer tokens to itself would be:
+    // "The new owner should be different from the current owner"
+    // This demonstrates a limitation in simulation testing at the moment. Please see the README for more information on practical debugging steps.
+
+    // Now that we've finished demonstrating that limitation, we'll make the call with the correct
+
+    // Confirm that the simulation account has zero fungible tokens
+    let fungible_tokens: U128 = near_view(
+        &r,
+        &FUNGIBLE_TOKEN_ACCOUNT_ID.into(),
+        "get_balance",
+        &json!({
+            "owner_id": SIMULATION_ACCOUNT_ID
+        })
+    );
+
+    assert_eq!(fungible_tokens.clone().0, 0);
+
+    // Give 50 fungible tokens to simulation account
+
+    near_call(&mut r,
+              &fungible_token,
+              &FUNGIBLE_TOKEN_ACCOUNT_ID,
+              "transfer",
+              &serde_json::to_vec(&json!({
+            "new_owner_id": SIMULATION_ACCOUNT_ID,
+            "amount": "50",
+        }),).unwrap(),
+              U64(MAX_GAS),
+              36_500_000_000_000_000_000_000
+    ).unwrap();
+
+    // Now transfer one of those fungible tokens to Alice
+
+    let will_succeed = near_call(&mut r,
+        &simulation_example,
+        &SIMULATION_ACCOUNT_ID,
+        "send_token_if_counter_even",
+        &serde_json::to_vec(&json!({
+            "new_num": alice_counter.clone(),
+            "token_account": FUNGIBLE_TOKEN_ACCOUNT_ID,
+            "recipient_account": ALICE_ACCOUNT_ID,
+        }),).unwrap(),
+        U64(MAX_GAS),
+        0
+    ).unwrap();
+
+    println!("Log(s) {:?}", will_succeed.logs);
+    // Make sure it was successful
+    assert_eq!(will_succeed.status, ExecutionStatus::SuccessValue(vec![]));
+
+    alice_tokens = near_view(
+        &r,
+        &FUNGIBLE_TOKEN_ACCOUNT_ID.into(),
+        "get_balance",
+        &json!({
+            "owner_id": ALICE_ACCOUNT_ID
+        })
+    );
+
+    assert_eq!(alice_tokens.clone().0, 1);
+
+    let fungible_tokens: U128 = near_view(
+        &r,
+        &FUNGIBLE_TOKEN_ACCOUNT_ID.into(),
+        "get_balance",
+        &json!({
+            "owner_id": SIMULATION_ACCOUNT_ID
+        })
+    );
+
+    assert_eq!(fungible_tokens.clone().0, 49);
 }
 
 fn basic_setup() -> (RuntimeStandalone, ExternalUser, ExternalUser, ExternalUser, ExternalUser, ExternalUser) {
