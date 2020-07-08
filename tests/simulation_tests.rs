@@ -186,6 +186,7 @@ fn deploy_all_check_allowance_before_increment() {
 
     assert_eq!(alice_counter.clone(), 2);
 
+    // Cross-contract call within a callback (see README for more details)
     // Check that the fungible token has been given to Alice since 2 is an even number
     // Note: this is a current limitation with simulation tests.
     // At this time you cannot send more cross-contract calls inside of a cross-contract callback
@@ -232,6 +233,7 @@ fn deploy_all_check_allowance_before_increment() {
         }
     }
 
+    // Error messages early in promise execution (see README for more details)
     // Note that above, the error we received is the error set up in src/lib.rs and not the error returned from the fungible token contract.
     // (At the time of this writing, the error message for an account attempting to transfer tokens to itself would be:
     // "The new owner should be different from the current owner"
