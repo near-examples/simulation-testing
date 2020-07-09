@@ -40,7 +40,14 @@ Second, like [integration tests in Rust](https://doc.rust-lang.org/rust-by-examp
 
 Besides the `utils.rs` file, there will be additional file(s) with tests that use it. The name of the file(s) is flexible. In this project, the tests are found in `tests/simulation_tests.rs` with the tests following the macro `#[test]`.
 
-Simulation tests will also be run with the same `cargo test` command shown for unit tets.
+Simulation tests will also be run with the same `cargo test` command shown for unit tests.
+
+The basic pattern of writing simulation tests, as shown in this example, is as follows:
+
+1. Set up simulation accounts (see `basic_setup` in `tests/simulation_tests.rs`)
+2. Deploy compiled contracts to those accounts, call initialization methods if applicable.
+3. Use helper functions like `near_view` (for read-only, non-mutable public functions) and `near_call` (for mutable public functions) to change state, check state, make cross-contract calls, etc.
+4. Use assertions on the `ExecutionStatus` returned from these calls to confirm expected behavior.
 
 ### Gotcha(s)
 
