@@ -129,13 +129,13 @@ impl ExternalUser {
 
 pub fn near_view<I: ToString, O: DeserializeOwned>(
     runtime: &RuntimeStandalone,
-    account_id: &AccountId,
+    contract_id: &AccountId,
     method: &str,
     args: I,
 ) -> O {
     let args = args.to_string();
     let result = runtime
-        .view_method_call(account_id, method, args.as_bytes())
+        .view_method_call(contract_id, method, args.as_bytes())
         .unwrap()
         .0;
     let output: O = serde_json::from_reader(result.as_slice()).unwrap();
@@ -144,17 +144,17 @@ pub fn near_view<I: ToString, O: DeserializeOwned>(
 
 pub fn near_call(
     runtime: &mut RuntimeStandalone,
-    account: &ExternalUser,
-    receiver_id: &str,
+    sending_account: &ExternalUser,
+    contract_id: &str,
     method: &str,
     args: &[u8],
     gas: U64,
     deposit: Balance
 ) -> TxResult {
-    let tx = account
-        .new_tx(runtime, receiver_id.to_string())
+    let tx = sending_account
+        .new_tx(runtime, contract_id.to_string())
         .function_call(method.into(), args.to_vec(), gas.into(), deposit)
-        .sign(&account.signer);
+        .sign(&sending_account.signer);
     let res = runtime.resolve_tx(tx).unwrap();
     runtime.process_all().unwrap();
     outcome_into_result(res)
