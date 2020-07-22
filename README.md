@@ -40,7 +40,7 @@ Second, like [integration tests in Rust](https://doc.rust-lang.org/rust-by-examp
 
 Besides the `utils.rs` file, there will be additional file(s) with tests that use it. The name of the file(s) is flexible. In this project, the tests are found in `tests/simulation_tests.rs` with the tests following the macro `#[test]`.
 
-Simulation tests will also be run with the same `cargo test` command shown for unit tests.
+Simulation tests will also be run with the same `cargo test` command used for unit tests.
 
 The basic pattern of writing simulation tests, as shown in this example, is as follows:
 
@@ -73,13 +73,13 @@ In this example, three compiled WebAssembly smart contracts are used.
 2. [Fungible token](https://github.com/near/near-sdk-rs/blob/master/examples/fungible-token/src/lib.rs)
 3. Simulation Example (found in `src/lib.rs` of this project) that does cross-contract calls to the other two contracts.
 
-When tests are run, mock accounts will be created, contracts deployed (from their respective `.wasm` files), contract functions called, methods returned, and logs will be printed.
+When tests are run, mock accounts will be created, contracts "deployed" (to simulated chain, from their respective `.wasm` files), contract functions called, methods returned, and logs will be printed.
 
 #### What happens
 
 This example is contrived, but shows some useful patterns. A counter can be incremented and when the number becomes even, a fungible token is then sent to the individual that incremented/decremented it. 
 
-The final test in `tests/simulation_tets.rs` will deploy multiple contracts. One of them is a simple counter. First it will increment the counter directly. 
+The final test in `tests/simulation_test.rs` will deploy multiple contracts. One of them is a simple counter. First it will increment the counter directly. 
 
 Then it will call the simulation contract (the contract source code which lives in `src/lib.rs`) to make a cross-contract call to increment the counter.
 
@@ -93,7 +93,7 @@ There's an example of a deep cross-contract call that will *not* work with simul
 
 #### Error messages early in promise execution
 
-This project illustrates another issue when writing tests with promises for cross-contract calls. In `tests/simulation_tests.rs`, there is a cross-contract call that is intended the fail. The error is supposed to alert the user that they cannot transfer fungible tokens to themselves. Instead, we only see the error message from the callback. Put another way, it's impossible to capture the error from the previous cross-contract call.
+This project illustrates another issue when writing tests with promises for cross-contract calls. In `tests/simulation_tests.rs`, there is a cross-contract call that is intended to fail. The error is supposed to alert the user that they cannot transfer fungible tokens to themselves. Instead, we only see the error message from the callback. Put another way, it's impossible to capture the error from the previous cross-contract call.
 
 At the time of this writing, this is a limitation of simulation tests. If a developer is writing simulation tests and can't determine the cause of preceding failure, it may be helpful to remove the callbacks one by one.
 
