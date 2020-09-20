@@ -108,7 +108,7 @@ The first part of this calls `transfer`, followed by a `.then` that calls `post_
 
 There are two types of cross-contract calls in NEAR:
 
-1. [High-level cross-contract](https://examples.near.org/rust-high-level-cross-contract) calls
+1. [High-level cross-contract](https://github.com/near/near-sdk-rs/tree/master/examples/cross-contract-high-level) calls
 2. [Low-level cross-contract](https://github.com/near/near-sdk-rs/tree/master/examples/cross-contract-low-level) calls
 
 Please visit those repositories in order to see the difference. Both are used in this project in order to be helpful to developers choosing either path.
