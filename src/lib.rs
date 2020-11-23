@@ -4,7 +4,7 @@ use borsh::{BorshDeserialize, BorshSerialize};
 use serde_json::json;
 use std::str;
 
-const SINGLE_CALL_GAS: u64 = 20_000_000_000_000; // 2 x 10^14
+const SINGLE_CALL_GAS: u64 = 200_000_000_000_000; // 2 x 10^14
 const TRANSFER_FROM_NEAR_COST: u128 = 36_500_000_000_000_000_000_000; // 365 x 10^20
 
 #[near_bindgen]
